@@ -1,0 +1,18 @@
+name = "dvwa-lab"
+main = "src/index.ts"
+compatibility_date = "2026-02-20"
+
+# 1. Define the Container and point it to the Docker Hub image
+[[containers]]
+class_name = "DvwaContainer"
+image = "vulnerables/web-dvwa:latest"
+
+# 2. Bind the Container to a Durable Object so the Worker can talk to it
+[[durable_objects.bindings]]
+name = "DVWA_CONTAINER"
+class_name = "DvwaContainer"
+
+# 3. Apply the initial migration required for Durable Objects
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["DvwaContainer"]

@@ -1,18 +1,25 @@
-/**
- * Welcome to Cloudflare Workers! This is your first worker.
- *
- * - Run `npm run dev` in your terminal to start a development server
- * - Open a browser tab at http://localhost:8787/ to see your worker in action
- * - Run `npm run deploy` to publish your worker
- *
- * Bind resources to your worker in `wrangler.jsonc`. After adding bindings, a type definition for the
- * `Env` object can be regenerated with `npm run cf-typegen`.
- *
- * Learn more at https://developers.cloudflare.com/workers/
- */
+import { Container, getContainer } from "@cloudflare/containers";
+
+// 1. Define the Container class (backed by the Durable Object)
+export class DvwaContainer extends Container {
+  // DVWA listens on port 80 internally
+  defaultPort = 80;
+  // Put the container to sleep after 10 minutes of inactivity to save compute costs
+  sleepAfter = "10m"; 
+}
 
 export default {
-	async fetch(request, env, ctx): Promise<Response> {
-		return new Response('Hello World!');
-	},
-} satisfies ExportedHandler<Env>;
+  async fetch(request: Request, env: any) {
+    // 2. Get the container instance. 
+    const containerInstance = getContainer(env.DVWA_CONTAINER, "dvwa-instance");
+
+    try {
+      // 3. Proxy the user's request directly into the Docker container
+      return await containerInstance.fetch(request);
+    } catch (e) {
+      return new Response("Container is booting up. Please refresh in 5 seconds...", { 
+        status: 503 
+      });
+    }
+  },
+};
